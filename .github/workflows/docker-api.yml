@@ -20,8 +20,8 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD}}
       
       - name: Build Docker image
-        run: docker build -t <ikel2777>/weather-wrapper:latest .
+        run: docker build -t <ikel2777>/weather-api:latest .
       
       - name: Push Docker image to DockerHub
-        run: docker push <ikel2777>/weather-wrapper:latest
+        run: docker push <ikel2777>/weather-api:latest
   
