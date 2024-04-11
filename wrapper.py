@@ -1,8 +1,9 @@
 import os
-
 import requests
+from flask import Flask, request, jsonify
 
-
+app = Flask(__name__)
+# print(os.environ.get('OPENWEATHER_API_KEY'))
 def get_weather(latitude, longitude):
     api_key = os.environ.get('OPENWEATHER_API_KEY')
     url = f'http://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={api_key}&units=metric'
@@ -10,8 +11,13 @@ def get_weather(latitude, longitude):
     data = response.json()
     return data
 
-if __name__ == "__main__":
-    latitude = float(input("Latitude : "))
-    longitude = float(input("Longitude : "))
+@app.route('/weather')
+def weather():
+    latitude = float(request.args.get('lat'))
+    longitude = float(request.args.get('lon'))
     weather_data = get_weather(latitude, longitude)
-    print(weather_data)
+    return jsonify(weather_data)
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=8080)
+# dd873b7df67e31543347c06989e163cc
