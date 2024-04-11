@@ -1,4 +1,4 @@
-# Weather Wrapper
+# Weather Wrapper TP1
 
 Ce projet est un wrapper météo qui récupère les données météorologiques d'un lieu donné en utilisant l'API OpenWeatherMap.
 
