@@ -9,7 +9,6 @@ COPY requirements.txt ./
 
 COPY . .
 
-ENV OPENWEATHER_API_KEY=""
-ENV FLASK_APP=wrapper.py
+ENV OPENWEATHER_API_KEY="dd873b7df67e31543347c06989e163cc"
 
 CMD ["python", "wrapper.py"]
