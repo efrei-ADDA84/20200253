@@ -1,4 +1,4 @@
-name: Azure
+name: Ikel_Azure
 
 on:
   push:
