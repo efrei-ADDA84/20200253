@@ -3,13 +3,16 @@ import requests
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
-# print(os.environ.get('OPENWEATHER_API_KEY'))
+print(os.environ.get('OPENWEATHER_API_KEY'))
 def get_weather(latitude, longitude):
     api_key = os.environ.get('OPENWEATHER_API_KEY')
     url = f'http://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={api_key}&units=metric'
     response = requests.get(url)
     data = response.json()
-    return data
+    if response.status_code == 200:
+        return data
+    else:
+        return None
 
 @app.route('/')
 def weather():
@@ -19,5 +22,5 @@ def weather():
     return jsonify(weather_data)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=80)
+    app.run(host='0.0.0.0', port=8080)
 # dd873b7df67e31543347c06989e163cc
