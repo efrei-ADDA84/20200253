@@ -1,62 +1,62 @@
-name: Docker Build & Azure Container Instance Deployment
+name: CI to Azure CR # Nom du workflow GitHub Actions
 
-on:
-  push:
-    branches:
-      - main
+on: # Déclencheur du workflow
+  push: 
+    branches: 
+      - main 
 
-jobs:
-  build_and_deploy:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+jobs: # Définition des jobs à exécuter
+  build-and-push: # Job pour construire et pousser l'image Docker
+    runs-on: ubuntu-latest # Dernière version d'Ubuntu comme runner
+    steps: 
+    - uses: actions/checkout@v2 # Étape pour extraire le code source du repository
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Set up Docker Buildx # Configure Docker Buildx 
+      uses: docker/setup-buildx-action@v1
 
-      - name: Build and push Docker image to Docker Hub
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/weather-api:latest
+    - name: Log in to Azure Container Registry # Se connecter à Azure Container Registry
+      uses: docker/login-action@v1
+      with: # Utilise les secrets pour s'authentifier
+        registry: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Login to Azure Container Registry (ACR)
-        uses: azure/docker-login@v1
-        with:
-          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
+    - name: Build and push Docker image to ACR # Construit et pousse l'image Docker vers ACR
+      uses: docker/build-push-action@v2
+      with: # Paramètres pour la construction et la poussée
+        context: . # Contexte de build (répertoire courant)
+        file: ./Dockerfile # Emplacement du Dockerfile
+        push: true # Active la poussée de l'image après la construction
+        tags: ${{ secrets.REGISTRY_LOGIN_SERVER }}/20200253:v1 # Tag de l'image à pousser
+      env: # Définit les variables d'environnement pour le build
+        OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }} # Clé API pour le service météo
 
-      - name: Build and push Docker image to ACR
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.REGISTRY_USERNAME }}/${{ secrets.REGISTRY_IMAGE_NAME }}:latest
+    - name: Run Hadolint # Exécute Hadolint pour vérifier la qualité du Dockerfile
+      uses: hadolint/hadolint-action@v1.6.0
+      with:
+        dockerfile: Dockerfile
+        
+  deploy: # Job pour déployer l'application
+    needs: build-and-push # Ce job a besoin que le job 'build-and-push' soit terminé
+    runs-on: ubuntu-latest 
+    steps: 
+    - name: Checkout code # Étape pour extraire le code source du repository
+      uses: actions/checkout@v2
 
-      - name: Deploy to Azure Container Instance (ACI)
-        uses: Azure/cli@v1
-        with:
-          azcliversion: 2.0.72
-          inlineScript: |
-            az container create \
-              --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-              --name ${{ secrets.AZURE_CONTAINER_INSTANCE_NAME }} \
-              --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.REGISTRY_USERNAME }}/${{ secrets.REGISTRY_IMAGE_NAME }}:latest \
-              --cpu 1 \
-              --memory 1 \
-              --registry-login-server ${{ secrets.REGISTRY_LOGIN_SERVER }} \
-              --registry-username ${{ secrets.REGISTRY_USERNAME }} \
-              --registry-password ${{ secrets.REGISTRY_PASSWORD }} \
-              --dns-name-label devops-${{ secrets.EFREI_IDENTIFIER }} \
-              --location francecentral \
-              --ip-address public \
-              --ports 80
+    - name: 'Login via Azure CLI' # Se connecter à Azure via la ligne de commande
+      uses: azure/login@v1
+      with: # Utilise les secrets pour l'authentification
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: 'Deploy to Azure Container Instance' # Déploie sur Azure Container Instance
+      uses: azure/aci-deploy@v1
+      with: # Paramètres pour le déploiement
+        resource-group: ADDA84-CTP # Groupe de ressources où déployer
+        dns-name-label: devops-20200253 # Label DNS pour l'instance
+        image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/20200511:v1 # Image à déployer
+        name: 20200253 # Nom de l'instance ACI
+        location: 'francecentral' # Emplacement géographique pour le déploiement
+        registry-login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }} # Serveur de connexion au registre
+        registry-username: ${{ secrets.REGISTRY_USERNAME }} # Nom d'utilisateur pour le registre
+        registry-password: ${{ secrets.REGISTRY_PASSWORD }} # Mot de passe pour le registre
+        secure-environment-variables: OPENWEATHER_API_KEY=${{ secrets.OPENWEATHER_API_KEY }} # Variable d'environnement sécurisée pour la clé API
