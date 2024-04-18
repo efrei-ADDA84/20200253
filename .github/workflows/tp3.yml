@@ -31,7 +31,7 @@ jobs:
           context: .
           file: ./dockerfile
           push: true
-          tags: mansat269/weatherapp:latest
+          tags: ikel2777/weather-api:latest
         
         env:
           OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
