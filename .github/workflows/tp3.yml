@@ -53,7 +53,7 @@ jobs: # Définition des jobs à exécuter
       with: # Paramètres pour le déploiement
         resource-group: ADDA84-CTP # Groupe de ressources où déployer
         dns-name-label: devops-20200253 # Label DNS pour l'instance
-        image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/20200511:v1 # Image à déployer
+        image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/20200253:v1 # Image à déployer
         name: 20200253 # Nom de l'instance ACI
         location: 'francecentral' # Emplacement géographique pour le déploiement
         registry-login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }} # Serveur de connexion au registre
