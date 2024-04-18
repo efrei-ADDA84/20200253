@@ -1,8 +1,8 @@
-FROM python:3.9-alpine
+FROM python:3.11-alpine
 
 WORKDIR /app
 
-RUN apk add --no-cache build-base=0.5-r3 libffi-dev=3.4.4-r3
+COPY tp1devopps.py .
 
 COPY requirements.txt ./
 # RUN pip install --no-cache-dir -r requirements.txt
