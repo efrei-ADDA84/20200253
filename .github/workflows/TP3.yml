@@ -1,0 +1,48 @@
+  name: Azure Container Instance (ACI) Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Login to Azure Container Registry (ACR)
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build and push Docker image to ACR
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.REGISTRY_USERNAME }}/${{ secrets.REGISTRY_IMAGE_NAME }}:latest
+
+      - name: Deploy to Azure Container Instance (ACI)
+        uses: Azure/cli@v1
+        with:
+          azcliversion: 2.0.72
+          inlineScript: |
+            az container create \
+              --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+              --name ${{ secrets.AZURE_CONTAINER_INSTANCE_NAME }} \
+              --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.REGISTRY_USERNAME }}/${{ secrets.REGISTRY_IMAGE_NAME }}:latest \
+              --cpu 1 \
+              --memory 1 \
+              --registry-login-server ${{ secrets.REGISTRY_LOGIN_SERVER }} \
+              --registry-username ${{ secrets.REGISTRY_USERNAME }} \
+              --registry-password ${{ secrets.REGISTRY_PASSWORD }} \
+              --dns-name-label devops-${{ secrets.EFREI_IDENTIFIER }} \
+              --location francecentral \
+              --ip-address public \
+              --ports 80
