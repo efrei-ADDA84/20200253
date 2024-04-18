@@ -11,7 +11,7 @@ def get_weather(latitude, longitude):
     data = response.json()
     return data
 
-@app.route('/weather')
+@app.route('/')
 def weather():
     latitude = float(request.args.get('lat'))
     longitude = float(request.args.get('lon'))
