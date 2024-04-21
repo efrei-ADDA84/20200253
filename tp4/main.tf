@@ -29,7 +29,7 @@ resource "tls_private_key" "main" {
 
 resource "azurerm_linux_virtual_machine" "main" {
   name                = "devops-20200253"
-  resource_group_name = d43ata.azurerm_resource_group.tp4.name
+  resource_group_name = data.azurerm_resource_group.tp4.name
   location            = data.azurerm_resource_group.tp4.location
   size                = "Standard_D2s_v3"
   admin_username      = "devops"
